@@ -1626,6 +1626,15 @@ services:
     tags:
       - { name: form.type }
 
+  form.type.sell.product.pricing.catalog_price_rules_type:
+    class: 'PrestaShopBundle\Form\Admin\Sell\Product\Pricing\CatalogPriceRulesType'
+    parent: 'form.type.translatable.aware'
+    arguments:
+      - '@prestashop.adapter.legacy.context'
+    public: true
+    tags:
+      - { name: form.type }
+
   form.type.sell.product.pricing.specific_price_type:
     class: 'PrestaShopBundle\Form\Admin\Sell\Product\Pricing\SpecificPriceType'
     parent: 'form.type.translatable.aware'
@@ -1674,6 +1683,7 @@ services:
       - '@prestashop.adapter.form.choice_provider.shop_name_by_id'
       - '@=service("prestashop.adapter.data_provider.currency").getDefaultCurrency().symbol'
       - '@=service("prestashop.adapter.multistore_feature").isUsed()'
+      - "@=service('prestashop.adapter.legacy.context').getContext().shop.id"
     public: true
     tags:
       - { name: form.type }

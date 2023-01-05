@@ -33,6 +33,7 @@ use PrestaShop\PrestaShop\Core\Domain\Product\Command\UpdateProductCommand;
 use PrestaShop\PrestaShop\Core\Domain\Product\Pack\ValueObject\PackStockType;
 use PrestaShop\PrestaShop\Core\Domain\Product\ValueObject\DeliveryTimeNoteType;
 use PrestaShop\PrestaShop\Core\Domain\Product\ValueObject\ProductCondition;
+use PrestaShop\PrestaShop\Core\Domain\Product\ValueObject\ProductType;
 use PrestaShop\PrestaShop\Core\Domain\Product\ValueObject\ProductVisibility;
 use PrestaShop\PrestaShop\Core\Domain\Product\ValueObject\RedirectType;
 use PrestaShop\PrestaShop\Core\Domain\Shop\ValueObject\ShopConstraint;
@@ -42,11 +43,13 @@ class UpdateProductCommandsBuilderTest extends AbstractProductCommandBuilderTest
 {
     /**
      * @dataProvider getExpectedCommands
+     * @dataProvider getExpectedCommandsMultiShop
+     * @dataProvider getExpectedCommandsForCombinationsTypeProduct
      *
      * @param array $formData
      * @param array $expectedCommands
      */
-    public function testBuildCommand(array $formData, array $expectedCommands)
+    public function testBuildCommands(array $formData, array $expectedCommands)
     {
         $builder = new UpdateProductCommandsBuilder(self::MODIFY_ALL_SHOPS_PREFIX);
         $builtCommands = $builder->buildCommands($this->getProductId(), $formData, $this->getSingleShopConstraint());
@@ -514,6 +517,22 @@ class UpdateProductCommandsBuilderTest extends AbstractProductCommandBuilderTest
             [$command],
         ];
 
+        $localizedTimeInStockNotes = [
+            1 => 'In stock',
+            2 => 'Yra sandelyje',
+        ];
+        $localizedTimeOutOfStockNotes = [
+            1 => 'Out of stock',
+            2 => 'Isparduota',
+        ];
+        $localizedAvailableNowLabels = [
+            1 => 'available now en',
+            2 => 'available now lt',
+        ];
+        $localizedAvailableLaterLabels = [
+            1 => 'available later en',
+            2 => 'available later lt',
+        ];
         $command = $this->getSingleShopCommand()
             ->setVisibility(ProductVisibility::INVISIBLE)
             ->setLocalizedShortDescriptions($localizedShortDescriptions)
@@ -539,14 +558,10 @@ class UpdateProductCommandsBuilderTest extends AbstractProductCommandBuilderTest
             ->setWeight('2.2')
             ->setDeliveryTimeNoteType(DeliveryTimeNoteType::TYPE_SPECIFIC)
             ->setAdditionalShippingCost('5.7')
-            ->setLocalizedDeliveryTimeInStockNotes([
-                1 => 'In stock',
-                2 => 'Yra sandelyje',
-            ])
-            ->setLocalizedDeliveryTimeOutOfStockNotes([
-                1 => 'Out of stock',
-                2 => 'Isparduota',
-            ])
+            ->setLocalizedDeliveryTimeInStockNotes($localizedTimeInStockNotes)
+            ->setLocalizedDeliveryTimeOutOfStockNotes($localizedTimeOutOfStockNotes)
+            ->setLocalizedAvailableNowLabels($localizedAvailableNowLabels)
+            ->setLocalizedAvailableLaterLabels($localizedAvailableLaterLabels)
             ->setActive(false)
         ;
 
@@ -619,22 +634,59 @@ class UpdateProductCommandsBuilderTest extends AbstractProductCommandBuilderTest
                         ],
                     ],
                 ],
+                'stock' => [
+                    'availability' => [
+                        'available_now_label' => $localizedAvailableNowLabels,
+                        'available_later_label' => $localizedAvailableLaterLabels,
+                    ],
+                ],
             ],
             [$command],
         ];
     }
 
-    /**
-     * @dataProvider getExpectedCommandsMultiShop
-     *
-     * @param array $formData
-     * @param array $expectedCommands
-     */
-    public function testBuildCommandMultiShop(array $formData, array $expectedCommands): void
+    public function getExpectedCommandsForCombinationsTypeProduct(): iterable
     {
-        $builder = new UpdateProductCommandsBuilder(self::MODIFY_ALL_SHOPS_PREFIX);
-        $builtCommands = $builder->buildCommands($this->getProductId(), $formData, $this->getSingleShopConstraint());
-        $this->assertEquals($expectedCommands, $builtCommands);
+        $localizedAvailableNowLabels = [
+            1 => 'available now en',
+            2 => 'available now lt',
+        ];
+        $localizedAvailableLaterLabels = [
+            1 => 'available later en',
+            2 => 'available later lt',
+        ];
+        // check labels for combinations type product
+        $command = $this->getSingleShopCommand()
+            ->setLocalizedAvailableNowLabels($localizedAvailableNowLabels)
+            ->setLocalizedAvailableLaterLabels($localizedAvailableLaterLabels)
+        ;
+        yield [
+            [
+                'header' => [
+                    'type' => ProductType::TYPE_COMBINATIONS,
+                ],
+                // for combinations product these should be ignored and the ones from combinations tab should be used instead.
+                'stock' => [
+                    'availability' => [
+                        'available_now_label' => [
+                            1 => 'Oh yes, we have it!',
+                            2 => 'Yra sandelyje',
+                        ],
+                        'available_later_label' => [
+                            1 => 'Sorry, unavailable.',
+                            2 => 'Greitai papildysime sandelį',
+                        ],
+                    ],
+                ],
+                'combinations' => [
+                    'availability' => [
+                        'available_now_label' => $localizedAvailableNowLabels,
+                        'available_later_label' => $localizedAvailableLaterLabels,
+                    ],
+                ],
+            ],
+            [$command],
+        ];
     }
 
     /**

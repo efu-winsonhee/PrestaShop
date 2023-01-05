@@ -288,6 +288,8 @@ class CombinationController extends FrameworkBundleAdminController
             'combinationLimitChoices' => self::COMBINATIONS_PAGINATION_OPTIONS,
             'combinationsLimit' => ProductCombinationFilters::LIST_LIMIT,
             'combinationsForm' => $combinationsForm->createView(),
+            'isMultistoreActive' => $this->get('prestashop.adapter.multistore_feature')->isActive(),
+            'contextShopName' => $this->getContext()->shop->name,
         ]);
     }
 
@@ -411,7 +413,7 @@ class CombinationController extends FrameworkBundleAdminController
             $this->getCommandBus()->handle(new BulkDeleteCombinationCommand(
                 $productId,
                 json_decode($combinationIds),
-                ShopConstraint::shop($this->getContextShopId())
+                $request->request->get('allShops') ? ShopConstraint::allShops() : ShopConstraint::shop($this->getContextShopId())
             ));
         } catch (Exception $e) {
             if ($e instanceof BulkCombinationException) {
@@ -513,7 +515,7 @@ class CombinationController extends FrameworkBundleAdminController
             $combinationsIds = $this->getCommandBus()->handle(new GenerateProductCombinationsCommand(
                 $productId,
                 $attributes,
-                ShopConstraint::shop((int) $this->getContextShopId())
+                $request->request->get('applyToAllShops') ? ShopConstraint::allShops() : ShopConstraint::shop((int) $this->getContextShopId())
             ));
         } catch (Exception $e) {
             return $this->json([

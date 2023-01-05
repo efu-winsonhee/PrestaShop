@@ -1,24 +1,19 @@
 // Import utils
+import basicHelper from '@utils/basicHelper';
+import files from '@utils/files';
 import helper from '@utils/helpers';
-
-// Import test context
 import testContext from '@utils/testContext';
+
+// Import login steps
+import loginCommon from '@commonTests/BO/loginBO';
+
+// Import data
+import SupplierData from '@data/faker/supplier';
 
 require('module-alias/register');
 
 // Import expect from chai
 const {expect} = require('chai');
-
-// Import utils
-const basicHelper = require('@utils/basicHelper');
-const files = require('@utils/files');
-
-// Import login steps
-const loginCommon = require('@commonTests/BO/loginBO');
-
-// Import data
-const SupplierFaker = require('@data/faker/supplier');
-
 // Import pages
 const dashboardPage = require('@pages/BO/dashboard');
 const brandsPage = require('@pages/BO/catalog/brands');
@@ -82,7 +77,7 @@ describe('BO - Catalog - Brands & Suppliers : Pagination and sort suppliers', as
   describe('Create 11 suppliers in BO', async () => {
     const creationTests = new Array(11).fill(0, 0, 11);
     creationTests.forEach((test, index) => {
-      const createSupplierData = new SupplierFaker({name: `todelete${index}`});
+      const createSupplierData = new SupplierData({name: `todelete${index}`});
       before(() => files.generateImage(createSupplierData.logo));
 
       it('should go to add new supplier page', async function () {
@@ -112,7 +107,7 @@ describe('BO - Catalog - Brands & Suppliers : Pagination and sort suppliers', as
     it('should change the items number to 10 per page', async function () {
       await testContext.addContextItem(this, 'testIdentifier', 'changeItemsNumberTo10', baseContext);
 
-      const paginationNumber = await suppliersPage.selectPaginationLimit(page, '10');
+      const paginationNumber = await suppliersPage.selectPaginationLimit(page, 10);
       expect(paginationNumber).to.contains('(page 1 / 2)');
     });
 
@@ -133,7 +128,7 @@ describe('BO - Catalog - Brands & Suppliers : Pagination and sort suppliers', as
     it('should change the items number to 50 per page', async function () {
       await testContext.addContextItem(this, 'testIdentifier', 'changeItemsNumberTo50', baseContext);
 
-      const paginationNumber = await suppliersPage.selectPaginationLimit(page, '50');
+      const paginationNumber = await suppliersPage.selectPaginationLimit(page, 50);
       expect(paginationNumber).to.contains('(page 1 / 1)');
     });
   });
@@ -173,23 +168,31 @@ describe('BO - Catalog - Brands & Suppliers : Pagination and sort suppliers', as
         async function () {
           await testContext.addContextItem(this, 'testIdentifier', test.args.testIdentifier, baseContext);
 
-          let nonSortedTable = await suppliersPage.getAllRowsColumnContent(page, test.args.sortBy);
+          const nonSortedTable = await suppliersPage.getAllRowsColumnContent(page, test.args.sortBy);
 
           await suppliersPage.sortTable(page, test.args.sortBy, test.args.sortDirection);
 
-          let sortedTable = await suppliersPage.getAllRowsColumnContent(page, test.args.sortBy);
+          const sortedTable = await suppliersPage.getAllRowsColumnContent(page, test.args.sortBy);
 
           if (test.args.isFloat) {
-            nonSortedTable = await nonSortedTable.map((text) => parseFloat(text));
-            sortedTable = await sortedTable.map((text) => parseFloat(text));
-          }
+            const nonSortedTableFloat = nonSortedTable.map((text) => parseFloat(text));
+            const sortedTableFloat = sortedTable.map((text) => parseFloat(text));
 
-          const expectedResult = await basicHelper.sortArray(nonSortedTable, test.args.isFloat);
+            const expectedResult = await basicHelper.sortArrayNumber(nonSortedTableFloat);
 
-          if (test.args.sortDirection === 'asc') {
-            await expect(sortedTable).to.deep.equal(expectedResult);
+            if (test.args.sortDirection === 'asc') {
+              await expect(sortedTableFloat).to.deep.equal(expectedResult);
+            } else {
+              await expect(sortedTableFloat).to.deep.equal(expectedResult.reverse());
+            }
           } else {
-            await expect(sortedTable).to.deep.equal(expectedResult.reverse());
+            const expectedResult = await basicHelper.sortArray(nonSortedTable);
+
+            if (test.args.sortDirection === 'asc') {
+              await expect(sortedTable).to.deep.equal(expectedResult);
+            } else {
+              await expect(sortedTable).to.deep.equal(expectedResult.reverse());
+            }
           }
         },
       );

@@ -1,19 +1,15 @@
 // Import utils
+import basicHelper from '@utils/basicHelper';
 import helper from '@utils/helpers';
-
-// Import test context
 import testContext from '@utils/testContext';
+
+// Import common tests
+import loginCommon from '@commonTests/BO/loginBO';
 
 require('module-alias/register');
 
 // Import expect from chai
 const {expect} = require('chai');
-
-// Import utils
-const basicHelper = require('@utils/basicHelper');
-
-// Import common tests
-const loginCommon = require('@commonTests/BO/loginBO');
 const {createOrderByCustomerTest} = require('@commonTests/FO/createOrder');
 
 // Import pages
@@ -34,7 +30,7 @@ let numberOfOrdersAfterFilter;
 
 const orderByCustomerData = {
   customer: DefaultCustomer,
-  product: 1,
+  productId: 1,
   productQuantity: 1,
   paymentMethod: PaymentMethods.wirePayment.moduleName,
 };
@@ -136,7 +132,7 @@ describe('BO - Orders : Pagination of orders table', async () => {
 
       sortedTable = await ordersPage.getAllRowsColumnContent(page, 'total_paid_tax_incl');
 
-      const expectedResult = await basicHelper.sortArray(nonSortedTable, true);
+      const expectedResult = await basicHelper.sortArrayNumber(nonSortedTable);
       await expect(sortedTable).to.deep.equal(expectedResult.reverse());
     });
 
@@ -195,7 +191,7 @@ describe('BO - Orders : Pagination of orders table', async () => {
 
       sortedTable = await ordersPage.getAllRowsColumnContent(page, 'id_order');
 
-      const expectedResult = await basicHelper.sortArray(nonSortedTable, true);
+      const expectedResult = await basicHelper.sortArrayNumber(nonSortedTable);
       await expect(sortedTable).to.deep.equal(expectedResult.reverse());
     });
 

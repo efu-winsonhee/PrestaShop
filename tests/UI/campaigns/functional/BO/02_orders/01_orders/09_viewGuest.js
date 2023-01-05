@@ -4,10 +4,10 @@ import helper from '@utils/helpers';
 // Import test context
 import testContext from '@utils/testContext';
 
-require('module-alias/register');
-
 // Import common tests
-const loginCommon = require('@commonTests/BO/loginBO');
+import loginCommon from '@commonTests/BO/loginBO';
+
+require('module-alias/register');
 const {createOrderByGuestTest} = require('@commonTests/FO/createOrder');
 const {deleteCustomerTest} = require('@commonTests/BO/customers/createDeleteCustomer');
 
@@ -37,7 +37,7 @@ const addressData = new AddressFaker({country: 'France'});
 // New order by guest data
 const orderByGuestData = {
   customer: customerData,
-  product: 4,
+  productId: 4,
   productQuantity: 1,
   address: addressData,
   paymentMethod: PaymentMethods.wirePayment.moduleName,

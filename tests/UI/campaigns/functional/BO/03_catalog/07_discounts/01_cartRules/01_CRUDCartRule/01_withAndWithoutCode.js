@@ -3,20 +3,20 @@ import date from '@utils/date';
 import helper from '@utils/helpers';
 import testContext from '@utils/testContext';
 
-require('module-alias/register');
-
 // Import login steps
-const loginCommon = require('@commonTests/BO/loginBO');
+import loginCommon from '@commonTests/BO/loginBO';
+
+// Import FO pages
+import cartPage from '@pages/FO/cart';
+import foHomePage from '@pages/FO/home';
+import foProductPage from '@pages/FO/product';
+
+require('module-alias/register');
 
 // Import BO pages
 const dashboardPage = require('@pages/BO/dashboard');
 const cartRulesPage = require('@pages/BO/catalog/discounts');
 const addCartRulePage = require('@pages/BO/catalog/discounts/add');
-
-// Import FO pages
-const foHomePage = require('@pages/FO/home');
-const foProductPage = require('@pages/FO/product');
-const cartPage = require('@pages/FO/cart');
 
 // Import data
 const CartRuleFaker = require('@data/faker/cartRule');

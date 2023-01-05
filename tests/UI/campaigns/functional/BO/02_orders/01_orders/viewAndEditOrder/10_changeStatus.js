@@ -1,19 +1,15 @@
 // Import utils
+import files from '@utils/files';
 import helper from '@utils/helpers';
-
-// Import test context
 import testContext from '@utils/testContext';
+
+// Import common tests
+import loginCommon from '@commonTests/BO/loginBO';
 
 require('module-alias/register');
 
 // Import expect from chai
 const {expect} = require('chai');
-
-// Import utils
-const files = require('@utils/files');
-
-// Import common tests
-const loginCommon = require('@commonTests/BO/loginBO');
 const {createOrderByCustomerTest} = require('@commonTests/FO/createOrder');
 
 // Import BO pages
@@ -35,7 +31,7 @@ let filePath;
 // New order by customer data
 const orderByCustomerData = {
   customer: DefaultCustomer,
-  product: 1,
+  productId: 1,
   productQuantity: 1,
   paymentMethod: PaymentMethods.wirePayment.moduleName,
 };

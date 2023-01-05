@@ -1,14 +1,15 @@
 // Import utils
+import basicHelper from '@utils/basicHelper';
 import date from '@utils/date';
 import helper from '@utils/helpers';
 import testContext from '@utils/testContext';
 
+// Import common tests
+import loginCommon from '@commonTests/BO/loginBO';
+
 require('module-alias/register');
 
 const {expect} = require('chai');
-
-// Import utils
-const basicHelper = require('@utils/basicHelper');
 
 // Import BO pages
 const dashboardPage = require('@pages/BO/dashboard');
@@ -17,9 +18,6 @@ const addProductPage = require('@pages/BO/catalog/products/add');
 const stocksPage = require('@pages/BO/catalog/stocks');
 const ordersPage = require('@pages/BO/orders');
 const addOrderPage = require('@pages/BO/orders/add');
-
-// Import common tests
-const loginCommon = require('@commonTests/BO/loginBO');
 const {bulkDeleteProductsTest} = require('@commonTests/BO/catalog/createDeleteProduct');
 const {enableEcoTaxTest, disableEcoTaxTest} = require('@commonTests/BO/international/enableDisableEcoTax');
 const {createCurrencyTest, deleteCurrencyTest} = require('@commonTests/BO/international/createDeleteCurrency');

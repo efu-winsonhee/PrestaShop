@@ -201,12 +201,22 @@ services:
 
   PrestaShop\PrestaShop\Core\Form\IdentifiableObject\DataHandler\CombinationFormDataHandler:
     autowire: true
+    arguments:
+      $contextShopId: '@=service("prestashop.adapter.legacy.configuration").getInt("PS_SHOP_DEFAULT")'
+      $defaultShopId: "@=service('prestashop.adapter.shop.context').getContextShopID()"
 
   PrestaShop\PrestaShop\Core\Form\IdentifiableObject\DataHandler\BulkCombinationFormDataHandler:
     autowire: true
+    arguments:
+      $contextShopId: '@=service("prestashop.adapter.legacy.configuration").getInt("PS_SHOP_DEFAULT")'
+      $defaultShopId: "@=service('prestashop.adapter.shop.context').getContextShopID()"
 
   PrestaShop\PrestaShop\Core\Form\IdentifiableObject\DataHandler\CombinationListFormDataHandler:
-    autowire: true
+    - '@prestashop.core.command_bus'
+    - '@PrestaShop\PrestaShop\Core\Form\IdentifiableObject\DataFormatter\CombinationListFormDataFormatter'
+    - '@PrestaShop\PrestaShop\Core\Form\IdentifiableObject\CommandBuilder\Product\Combination\CombinationCommandsBuilder'
+    - '@=service("prestashop.adapter.legacy.configuration").getInt("PS_SHOP_DEFAULT")'
+    - "@=service('prestashop.adapter.shop.context').getContextShopID()"
 
   prestashop.core.form.identifiable_object.data_handler.product_image_form_data_handler:
     class: 'PrestaShop\PrestaShop\Core\Form\IdentifiableObject\DataHandler\ProductImageFormDataHandler'

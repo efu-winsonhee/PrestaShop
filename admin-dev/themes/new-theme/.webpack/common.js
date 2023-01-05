@@ -118,6 +118,7 @@ module.exports = {
     product_page: './js/product-page/index',
     product_preferences: './js/pages/product-preferences',
     product_shops: './js/pages/product/shops',
+    pre_select_product_shop: './js/pages/product/pre-select-product-shop',
     profiles: './js/pages/profiles',
     search_engine: './js/pages/search-engine',
     security: './js/pages/security',
@@ -157,14 +158,14 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.js', '.vue', '.json'],
     alias: {
-      vue$: 'vue/dist/vue.common.js',
+      vue: 'vue/dist/vue.esm-bundler.js',
       '@app': path.resolve(__dirname, '../js/app'),
       '@js': path.resolve(__dirname, '../js'),
       '@pages': path.resolve(__dirname, '../js/pages'),
       '@components': path.resolve(__dirname, '../js/components'),
       '@scss': path.resolve(__dirname, '../scss'),
       '@node_modules': path.resolve(__dirname, '../node_modules'),
-      '@vue': path.resolve(__dirname, '../js/vue'),
+      '@PSVue': path.resolve(__dirname, '../js/vue'),
       '@PSTypes': path.resolve(__dirname, '../js/types'),
       '@images': path.resolve(__dirname, '../img'),
     },
@@ -231,13 +232,13 @@ module.exports = {
         ],
       },
       {
-        test: /dropzone\/dist\/dropzone\.js/,
+        test: require.resolve('dropzone'),
         loader: 'imports-loader',
         options: {
           wrapper: {
             thisArg: 'window',
             args: {
-              module: null,
+              module: false,
             },
           },
         },
@@ -396,7 +397,10 @@ module.exports = {
     new ForkTsCheckerWebpackPlugin({
       typescript: {
         extensions: {
-          vue: true,
+          vue: {
+            enabled: true,
+            compiler: '@vue/compiler-sfc',
+          },
         },
         diagnosticOptions: {
           semantic: true,
@@ -408,6 +412,10 @@ module.exports = {
       filename: 'preload.tpl',
       templateContent: '{{{preloadLinks}}}',
       inject: false,
+    }),
+    new webpack.DefinePlugin({
+      __VUE_OPTIONS_API__: true,
+      __VUE_PROD_DEVTOOLS__: false,
     }),
     new FontPreloadPlugin({
       index: 'preload.tpl',

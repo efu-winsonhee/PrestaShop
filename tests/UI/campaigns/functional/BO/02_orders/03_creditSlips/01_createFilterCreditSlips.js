@@ -1,15 +1,13 @@
 // Import utils
 import date from '@utils/date';
+import files from '@utils/files';
 import helper from '@utils/helpers';
 import testContext from '@utils/testContext';
 
-require('module-alias/register');
-
-// Import utils
-const files = require('@utils/files');
-
 // Import common tests
-const loginCommon = require('@commonTests/BO/loginBO');
+import loginCommon from '@commonTests/BO/loginBO';
+
+require('module-alias/register');
 const {createOrderByCustomerTest} = require('@commonTests/FO/createOrder');
 
 // Import BO pages
@@ -37,7 +35,7 @@ const todayDate = date.getDateFormat('yyyy-mm-dd');
 const todayDateToCheck = date.getDateFormat('mm/dd/yyyy');
 const orderByCustomerData = {
   customer: DefaultCustomer,
-  product: 1,
+  productId: 1,
   productQuantity: 5,
   paymentMethod: PaymentMethods.wirePayment.moduleName,
 };

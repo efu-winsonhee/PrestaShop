@@ -1,17 +1,15 @@
 // Import utils
 import date from '@utils/date';
+import files from '@utils/files';
 import helper from '@utils/helpers';
 import testContext from '@utils/testContext';
+
+// Import common tests
+import loginCommon from '@commonTests/BO/loginBO';
 
 require('module-alias/register');
 
 const {expect} = require('chai');
-
-// Import utils
-const files = require('@utils/files');
-
-// Import common tests
-const loginCommon = require('@commonTests/BO/loginBO');
 const {createOrderByCustomerTest} = require('@commonTests/FO/createOrder');
 const {createCurrencyTest, deleteCurrencyTest} = require('@commonTests/BO/international/createDeleteCurrency');
 
@@ -43,7 +41,7 @@ const totalOrder = 22.94;
 // New order by customer data
 const orderByCustomerData = {
   customer: DefaultCustomer,
-  product: 1,
+  productId: 1,
   productQuantity: 1,
   paymentMethod: PaymentMethods.wirePayment.moduleName,
 };

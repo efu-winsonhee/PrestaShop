@@ -59,7 +59,7 @@ class ImageSettings extends BOBasePage {
     this.tableColumnActionsDeleteLink = (row) => `${this.tableColumnActionsDropdownMenu(row)} a.delete`;
 
     // Confirmation modal
-    this.deleteModalButtonYes = '#popup_ok';
+    this.deleteModalButtonYes = '.btn-confirm-delete-images-type';
 
     // Bulk actions selectors
     this.bulkActionBlock = 'div.bulk-actions';
@@ -139,7 +139,7 @@ class ImageSettings extends BOBasePage {
       case 'select':
         await Promise.all([
           page.waitForNavigation({waitUntil: 'networkidle'}),
-          this.selectByVisibleText(page, this.filterColumn(filterBy), value ? 'Yes' : 'No'),
+          this.selectByVisibleText(page, this.filterColumn(filterBy), value === '1' ? 'Yes' : 'No'),
         ]);
         break;
 

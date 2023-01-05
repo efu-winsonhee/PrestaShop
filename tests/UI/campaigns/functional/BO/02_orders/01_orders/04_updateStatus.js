@@ -1,25 +1,21 @@
 // Import utils
+import files from '@utils/files';
 import helper from '@utils/helpers';
-
-// Import test context
 import testContext from '@utils/testContext';
 
+// Import commonTests
+import loginCommon from '@commonTests/BO/loginBO';
+
+// Import FO pages
+import homePage from '@pages/FO/home';
+import foLoginPage from '@pages/FO/login';
+
 require('module-alias/register');
-
-// Import utils
-const files = require('@utils/files');
-
-// Import common tests
-const loginCommon = require('@commonTests/BO/loginBO');
 const {createOrderByCustomerTest} = require('@commonTests/FO/createOrder');
 
 // Import BO pages
 const dashboardPage = require('@pages/BO/dashboard');
 const ordersPage = require('@pages/BO/orders/index');
-const homePage = require('@pages/FO/home');
-
-// Import FO pages
-const foLoginPage = require('@pages/FO/login');
 const foMyAccountPage = require('@pages/FO/myAccount');
 const foOrderHistoryPage = require('@pages/FO/myAccount/orderHistory');
 
@@ -40,7 +36,7 @@ let orderId;
 
 const orderByCustomerData = {
   customer: DefaultCustomer,
-  product: 1,
+  productId: 1,
   productQuantity: 1,
   paymentMethod: PaymentMethods.wirePayment.moduleName,
 };

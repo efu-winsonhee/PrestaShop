@@ -1,23 +1,18 @@
 // Import utils
+import files from '@utils/files';
 import helper from '@utils/helpers';
-
-// Import test context
 import testContext from '@utils/testContext';
+
+// Import login steps
+import loginCommon from '@commonTests/BO/loginBO';
+
+// Import data
+import SupplierData from '@data/faker/supplier';
 
 require('module-alias/register');
 
 // Import expect from chai
 const {expect} = require('chai');
-
-// Import utils
-const files = require('@utils/files');
-
-// Import login steps
-const loginCommon = require('@commonTests/BO/loginBO');
-
-// Import data
-const SupplierFaker = require('@data/faker/supplier');
-
 // Import pages
 const dashboardPage = require('@pages/BO/dashboard');
 const brandsPage = require('@pages/BO/catalog/brands');
@@ -30,8 +25,8 @@ const baseContext = 'functional_BO_catalog_brandsAndSuppliers_suppliers_CRUDSupp
 let browserContext;
 let page;
 
-const createSupplierData = new SupplierFaker();
-const editSupplierData = new SupplierFaker();
+const createSupplierData = new SupplierData();
+const editSupplierData = new SupplierData();
 
 // CRUD Supplier
 describe('BO - Catalog - Brands & Suppliers : CRUD supplier', async () => {

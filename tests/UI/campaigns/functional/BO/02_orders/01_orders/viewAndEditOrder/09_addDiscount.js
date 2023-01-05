@@ -4,12 +4,12 @@ import helper from '@utils/helpers';
 // Import test context
 import testContext from '@utils/testContext';
 
+// Import common tests
+import loginCommon from '@commonTests/BO/loginBO';
+
 require('module-alias/register');
 
 const {expect} = require('chai');
-
-// Import common tests
-const loginCommon = require('@commonTests/BO/loginBO');
 const {createOrderByCustomerTest} = require('@commonTests/FO/createOrder');
 const {bulkDeleteCartRuleTest} = require('@commonTests/BO/catalog/createDeleteCartRule');
 
@@ -34,7 +34,7 @@ let totalOrder = 0;
 // New order by customer data
 const orderByCustomerData = {
   customer: DefaultCustomer,
-  product: 1,
+  productId: 1,
   productQuantity: 1,
   paymentMethod: PaymentMethods.wirePayment.moduleName,
 };

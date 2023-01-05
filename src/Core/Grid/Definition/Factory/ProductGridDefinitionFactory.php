@@ -46,14 +46,18 @@ use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\LinkColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\PositionColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ToggleColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn;
+use PrestaShop\PrestaShop\Core\Grid\Column\Type\Product\ShopListColumn;
 use PrestaShop\PrestaShop\Core\Grid\Filter\Filter;
 use PrestaShop\PrestaShop\Core\Grid\Filter\FilterCollection;
 use PrestaShop\PrestaShop\Core\Hook\HookDispatcherInterface;
+use PrestaShop\PrestaShop\Core\Multistore\MultistoreContextCheckerInterface;
 use PrestaShopBundle\Form\Admin\Type\IntegerMinMaxFilterType;
 use PrestaShopBundle\Form\Admin\Type\NumberMinMaxFilterType;
 use PrestaShopBundle\Form\Admin\Type\SearchAndResetType;
+use PrestaShopBundle\Form\Admin\Type\ShopSelectorType;
 use PrestaShopBundle\Form\Admin\Type\YesAndNoChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormFactoryInterface;
 
 /**
  * Defines products grid name, its columns, actions, bulk actions and filters.
@@ -70,16 +74,25 @@ final class ProductGridDefinitionFactory extends AbstractGridDefinitionFactory
     private $configuration;
 
     /**
-     * @param HookDispatcherInterface $hookDispatcher
-     * @param ConfigurationInterface $configuration
+     * @var MultistoreContextCheckerInterface
      */
+    private $multiStoreContext;
+
+    /**
+     * @var FormFactoryInterface
+     */
+    private $formFactory;
+
     public function __construct(
         HookDispatcherInterface $hookDispatcher,
-        ConfigurationInterface $configuration
+        ConfigurationInterface $configuration,
+        MultistoreContextCheckerInterface $multiStoreContext,
+        FormFactoryInterface $formFactory
     ) {
         parent::__construct($hookDispatcher);
-
         $this->configuration = $configuration;
+        $this->multiStoreContext = $multiStoreContext;
+        $this->formFactory = $formFactory;
     }
 
     /**
@@ -103,6 +116,16 @@ final class ProductGridDefinitionFactory extends AbstractGridDefinitionFactory
      */
     protected function getColumns()
     {
+        if ($this->multiStoreContext->isAllShopContext() || $this->multiStoreContext->isGroupShopContext()) {
+            $editAttributes = [
+                'class' => 'multi-shop-edit-product',
+                'data-modal-title' => $this->trans('Select a store', [], 'Admin.Catalog.Feature'),
+                'data-shop-selector' => $this->formFactory->create(ShopSelectorType::class),
+            ];
+        } else {
+            $editAttributes = [];
+        }
+
         $columns = (new ColumnCollection())
             ->add(
                 (new BulkActionColumn('bulk'))
@@ -133,6 +156,7 @@ final class ProductGridDefinitionFactory extends AbstractGridDefinitionFactory
                         'route' => 'admin_products_v2_edit',
                         'route_param_name' => 'productId',
                         'route_param_field' => 'id_product',
+                        'attr' => $editAttributes,
                     ])
             )
             ->add(
@@ -144,6 +168,7 @@ final class ProductGridDefinitionFactory extends AbstractGridDefinitionFactory
                         'route_param_name' => 'productId',
                         'route_param_field' => 'id_product',
                         'route_fragment' => 'tab-product_specifications-tab',
+                        'attr' => $editAttributes,
                     ])
             )
             ->add(
@@ -162,6 +187,7 @@ final class ProductGridDefinitionFactory extends AbstractGridDefinitionFactory
                         'route_param_name' => 'productId',
                         'route_param_field' => 'id_product',
                         'route_fragment' => 'tab-product_pricing-tab',
+                        'attr' => $editAttributes,
                     ])
             )
             ->add(
@@ -174,6 +200,7 @@ final class ProductGridDefinitionFactory extends AbstractGridDefinitionFactory
                         'route_param_name' => 'productId',
                         'route_param_field' => 'id_product',
                         'route_fragment' => 'tab-product_pricing-tab',
+                        'attr' => $editAttributes,
                     ])
             )
             ->add(
@@ -223,7 +250,19 @@ final class ProductGridDefinitionFactory extends AbstractGridDefinitionFactory
                         'route_param_name' => 'productId',
                         'route_param_field' => 'id_product',
                         'route_fragment' => 'tab-product_stock-tab',
+                        'attr' => $editAttributes,
                     ])
+            );
+        }
+
+        if ($this->multiStoreContext->isAllShopContext() || $this->multiStoreContext->isGroupShopContext()) {
+            $columns->addBefore('image', (new ShopListColumn('associated_shops'))
+                ->setName($this->trans('Store(s)', [], 'Admin.Global'))
+                ->setOptions([
+                    'field' => 'associated_shops',
+                    'ids_field' => 'associated_shops_ids',
+                    'max_displayed_characters' => 35,
+                ])
             );
         }
 
@@ -232,17 +271,26 @@ final class ProductGridDefinitionFactory extends AbstractGridDefinitionFactory
 
     protected function getRowActions(): RowActionCollection
     {
+        $editOptions = [
+            'route' => 'admin_products_v2_edit',
+            'route_param_name' => 'productId',
+            'route_param_field' => 'id_product',
+            'clickable_row' => true,
+        ];
+        if ($this->multiStoreContext->isAllShopContext() || $this->multiStoreContext->isGroupShopContext()) {
+            $editOptions['attr'] = [
+                'class' => 'multi-shop-edit-product',
+                'data-modal-title' => $this->trans('Select a store', [], 'Admin.Catalog.Feature'),
+                'data-shop-selector' => $this->formFactory->create(ShopSelectorType::class),
+            ];
+        }
+
         $rowActions = new RowActionCollection();
         $rowActions
             ->add((new LinkRowAction('edit'))
             ->setName($this->trans('Edit', [], 'Admin.Actions'))
             ->setIcon('edit')
-            ->setOptions([
-                'route' => 'admin_products_v2_edit',
-                'route_param_name' => 'productId',
-                'route_param_field' => 'id_product',
-                'clickable_row' => true,
-            ])
+            ->setOptions($editOptions)
             )
             ->add((new LinkRowAction('preview'))
             ->setName($this->trans('Preview', [], 'Admin.Actions'))

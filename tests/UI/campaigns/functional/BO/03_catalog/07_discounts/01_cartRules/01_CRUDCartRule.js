@@ -1,24 +1,24 @@
 // Import utils
 import helper from '@utils/helpers';
-
-// Import test context
 import testContext from '@utils/testContext';
+
+// Import utils
+import loginCommon from '@commonTests/BO/loginBO';
+
+// Import FO pages
+import cartPage from '@pages/FO/cart';
+import foHomePage from '@pages/FO/home';
+import foLoginPage from '@pages/FO/login';
+import foProductPage from '@pages/FO/product';
 
 require('module-alias/register');
 // Using chai
 const {expect} = require('chai');
 
-// Import utils=
-const loginCommon = require('@commonTests/BO/loginBO');
-
 // Import pages
 const dashboardPage = require('@pages/BO/dashboard');
 const cartRulesPage = require('@pages/BO/catalog/discounts');
 const addCartRulePage = require('@pages/BO/catalog/discounts/add');
-const foHomePage = require('@pages/FO/home');
-const foLoginPage = require('@pages/FO/login');
-const foProductPage = require('@pages/FO/product');
-const cartPage = require('@pages/FO/cart');
 
 // Import data
 const CartRuleFaker = require('@data/faker/cartRule');

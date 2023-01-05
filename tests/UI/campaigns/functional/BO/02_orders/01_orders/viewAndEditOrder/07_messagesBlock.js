@@ -3,12 +3,16 @@ import date from '@utils/date';
 import helper from '@utils/helpers';
 import testContext from '@utils/testContext';
 
+// Import commonTests
+import loginCommon from '@commonTests/BO/loginBO';
+
+// Import FO pages
+import foHomePage from '@pages/FO/home';
+import foLoginPage from '@pages/FO/login';
+
 require('module-alias/register');
 
 const {expect} = require('chai');
-
-// Import common tests
-const loginCommon = require('@commonTests/BO/loginBO');
 const {createOrderByCustomerTest} = require('@commonTests/FO/createOrder');
 
 // Import BO pages
@@ -16,10 +20,6 @@ const dashboardPage = require('@pages/BO/dashboard');
 const ordersPage = require('@pages/BO/orders');
 const orderPageMessagesBlock = require('@pages/BO/orders/view/messagesBlock');
 const orderMessagesPage = require('@pages/BO/customerService/orderMessages');
-
-// Import FO pages
-const foLoginPage = require('@pages/FO/login');
-const foHomePage = require('@pages/FO/home');
 const foOrderConfirmationPage = require('@pages/FO/checkout/orderConfirmation');
 const foMyAccountPage = require('@pages/FO/myAccount');
 const foOrderHistoryPage = require('@pages/FO/myAccount/orderHistory');
@@ -42,7 +42,7 @@ let textMessage = '';
 // New order by customer data
 const orderByCustomerData = {
   customer: DefaultCustomer,
-  product: 1,
+  productId: 1,
   productQuantity: 1,
   paymentMethod: PaymentMethods.wirePayment.moduleName,
 };

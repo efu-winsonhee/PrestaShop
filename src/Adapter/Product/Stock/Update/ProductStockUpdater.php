@@ -85,17 +85,11 @@ class ProductStockUpdater
      */
     private $advancedStockEnabled;
 
-    /** @var HookManager */
+    /**
+     * @var HookManager
+     */
     private $hookManager;
 
-    /**
-     * @param StockManager $stockManager
-     * @param ProductMultiShopRepository $productRepository
-     * @param StockAvailableMultiShopRepository $stockAvailableRepository
-     * @param MovementReasonRepository $movementReasonRepository
-     * @param Configuration $configuration
-     * @param HookManager $hookManager
-     */
     public function __construct(
         StockManager $stockManager,
         ProductMultiShopRepository $productRepository,
@@ -165,8 +159,8 @@ class ProductStockUpdater
                 continue;
             }
 
-            $employeeEditionReasonId = $this->movementReasonRepository->getEmployeeEditionReasonId($stockAvailable->quantity > 0);
-            $stockModification = new StockModification(-$stockAvailable->quantity, $employeeEditionReasonId);
+            $previousQuantity = (int) $stockAvailable->quantity;
+            $stockModification = StockModification::buildFixedQuantity(0);
 
             // Update product
             $shopConstraint = ShopConstraint::shop($shopId->getValue());
@@ -181,16 +175,19 @@ class ProductStockUpdater
 
             // Update stock
             $stockAvailable->quantity = 0;
-            $this->stockAvailableRepository->update($stockAvailable);
+
+            $fallbackShopId = $this->stockAvailableRepository->getFallbackShopId($stockAvailable);
+            $this->stockAvailableRepository->update($stockAvailable, $fallbackShopId);
 
             // Generate stock movement related to the employee
-            $this->saveMovement($stockAvailable, $stockModification);
+            $this->saveMovement($stockAvailable, $stockModification, $previousQuantity, $shopId->getValue());
 
             // Update reserved and physical quantity for this stock
+            $shopConstraint = ShopConstraint::shop($fallbackShopId->getValue());
             $this->stockAvailableRepository->updatePhysicalProductQuantity(
                 new StockId((int) $stockAvailable->id),
-                new OrderStateId((int) $this->configuration->get('PS_OS_ERROR', null, ShopConstraint::shop((int) $stockAvailable->id_shop))),
-                new OrderStateId((int) $this->configuration->get('PS_OS_CANCELED', null, ShopConstraint::shop((int) $stockAvailable->id_shop)))
+                new OrderStateId((int) $this->configuration->get('PS_OS_ERROR', null, $shopConstraint)),
+                new OrderStateId((int) $this->configuration->get('PS_OS_CANCELED', null, $shopConstraint))
             );
 
             if ($this->advancedStockEnabled) {
@@ -248,7 +245,10 @@ class ProductStockUpdater
             $updatableProperties[] = 'pack_stock_type';
         }
         if (null !== $properties->getStockModification()) {
-            $product->quantity = $stockAvailable->quantity + $properties->getStockModification()->getDeltaQuantity();
+            $product->quantity = $properties->getStockModification()->getDeltaQuantity() !== null ?
+                $stockAvailable->quantity + $properties->getStockModification()->getDeltaQuantity() :
+                $properties->getStockModification()->getFixedQuantity()
+            ;
             $updatableProperties[] = 'quantity';
         }
         if (null !== $properties->getAvailableDate()) {
@@ -264,14 +264,13 @@ class ProductStockUpdater
         if ($shopConstraint->forAllShops()) {
             // Since each stock has a distinct ID we can't use the ObjectModel multi shop feature based on id_shop_list,
             // so we manually loop to update each associated stocks
-            $shops = $this->stockAvailableRepository->getAssociatedShopIds(new StockId((int) $stockAvailable->id));
-            foreach ($shops as $shopId) {
-                if ((int) $stockAvailable->id_product_attribute === NoCombinationId::NO_COMBINATION_ID) {
-                    $shopStockAvailable = $this->stockAvailableRepository->getForProduct(new ProductId((int) $stockAvailable->id_product), $shopId);
-                } else {
-                    $shopStockAvailable = $this->stockAvailableRepository->getForCombination(new CombinationId((int) $stockAvailable->id_product_attribute), $shopId);
-                }
+            $stockIds = $this->stockAvailableRepository->getAllShopsStockIds(
+                new ProductId((int) $stockAvailable->id_product),
+                (int) $stockAvailable->id_product_attribute === NoCombinationId::NO_COMBINATION_ID ? new NoCombinationId() : new CombinationId((int) $stockAvailable->id_product_attribute)
+            );
 
+            foreach ($stockIds as $stockId) {
+                $shopStockAvailable = $this->stockAvailableRepository->get($stockId);
                 $this->updateStockAvailable($shopStockAvailable, $properties);
             }
         } else {
@@ -282,6 +281,7 @@ class ProductStockUpdater
     private function updateStockAvailable(StockAvailable $stockAvailable, ProductStockProperties $properties)
     {
         $stockUpdateRequired = false;
+        $previousQuantity = (int) $stockAvailable->quantity;
 
         if (null !== $properties->getOutOfStockType()) {
             $stockAvailable->out_of_stock = $properties->getOutOfStockType()->getValue();
@@ -293,7 +293,10 @@ class ProductStockUpdater
         }
 
         if ($properties->getStockModification()) {
-            $stockAvailable->quantity += $properties->getStockModification()->getDeltaQuantity();
+            $stockAvailable->quantity = $properties->getStockModification()->getDeltaQuantity() !== null ?
+                $stockAvailable->quantity + $properties->getStockModification()->getDeltaQuantity() :
+                $properties->getStockModification()->getFixedQuantity()
+            ;
             $stockUpdateRequired = true;
         }
 
@@ -301,17 +304,19 @@ class ProductStockUpdater
             return;
         }
 
-        $this->stockAvailableRepository->update($stockAvailable);
+        $fallbackShopId = $this->stockAvailableRepository->getFallbackShopId($stockAvailable);
+        $this->stockAvailableRepository->update($stockAvailable, $fallbackShopId);
 
         if ($properties->getStockModification()) {
             //Save movement only after stock has been updated
-            $this->saveMovement($stockAvailable, $properties->getStockModification());
+            $this->saveMovement($stockAvailable, $properties->getStockModification(), $previousQuantity, $fallbackShopId->getValue());
 
             // Update reserved and physical quantity for this stock
+            $shopConstraint = ShopConstraint::shop($fallbackShopId->getValue());
             $this->stockAvailableRepository->updatePhysicalProductQuantity(
                 new StockId((int) $stockAvailable->id),
-                new OrderStateId((int) $this->configuration->get('PS_OS_ERROR', null, ShopConstraint::shop((int) $stockAvailable->id_shop))),
-                new OrderStateId((int) $this->configuration->get('PS_OS_CANCELED', null, ShopConstraint::shop((int) $stockAvailable->id_shop)))
+                new OrderStateId((int) $this->configuration->get('PS_OS_ERROR', null, $shopConstraint)),
+                new OrderStateId((int) $this->configuration->get('PS_OS_CANCELED', null, $shopConstraint))
             );
         }
     }
@@ -319,16 +324,26 @@ class ProductStockUpdater
     /**
      * @param StockAvailable $stockAvailable
      * @param StockModification $stockModification
+     * @param int $previousQuantity
+     * @param int $affectedShopId
      */
-    private function saveMovement(StockAvailable $stockAvailable, StockModification $stockModification): void
+    private function saveMovement(StockAvailable $stockAvailable, StockModification $stockModification, int $previousQuantity, int $affectedShopId): void
     {
+        if ($stockModification->getDeltaQuantity()) {
+            $deltaQuantity = $stockModification->getDeltaQuantity();
+        } else {
+            $deltaQuantity = $stockModification->getFixedQuantity() - $previousQuantity;
+        }
+
+        $movementReasonId = $this->movementReasonRepository->getEmployeeEditionReasonId($deltaQuantity > 0);
+
         $this->stockManager->saveMovement(
             $stockAvailable->id_product,
             $stockAvailable->id_product_attribute,
-            $stockModification->getDeltaQuantity(),
+            $deltaQuantity,
             [
-                'id_stock_mvt_reason' => $stockModification->getMovementReasonId()->getValue(),
-                'id_shop' => (int) $stockAvailable->id_shop,
+                'id_stock_mvt_reason' => $movementReasonId->getValue(),
+                'id_shop' => (int) $affectedShopId,
             ]
         );
 
@@ -338,8 +353,8 @@ class ProductStockUpdater
                 'id_product' => $stockAvailable->id_product,
                 'id_product_attribute' => $stockAvailable->id_product_attribute,
                 'quantity' => $stockAvailable->quantity,
-                'delta_quantity' => $stockModification->getDeltaQuantity(),
-                'id_shop' => (int) $stockAvailable->id_shop,
+                'delta_quantity' => $deltaQuantity,
+                'id_shop' => (int) $affectedShopId,
             ]
         );
     }

@@ -5,6 +5,7 @@ import mailHelper from '@utils/mailHelper';
 
 // Import test context
 import testContext from '@utils/testContext';
+import loginCommon from '@commonTests/BO/loginBO';
 
 require('module-alias/register');
 
@@ -14,7 +15,6 @@ const {expect} = require('chai');
 const {setupSmtpConfigTest, resetSmtpConfigTest} = require('@commonTests/BO/advancedParameters/configSMTP');
 const {createEmployeeTest, deleteEmployeeTest} = require('@commonTests/BO/advancedParameters/createDeleteEmployee');
 const {deleteCustomerTest} = require('@commonTests/BO/customers/createDeleteCustomer');
-const loginCommon = require('@commonTests/BO/loginBO');
 
 // Import FO common tests
 const {createOrderByCustomerTest, createOrderByGuestTest} = require('@commonTests/FO/createOrder');
@@ -57,7 +57,7 @@ const createEmployeeData = new EmployeeFaker({
 // New order by customer data
 const orderByCustomerData = {
   customer: DefaultCustomer,
-  product: 1,
+  productId: 1,
   productQuantity: 1,
   paymentMethod: PaymentMethods.wirePayment.moduleName,
 };
@@ -65,7 +65,7 @@ const orderByCustomerData = {
 // New order by guest data
 const orderByGuestData = {
   customer: customerData,
-  product: 4,
+  productId: 4,
   productQuantity: 1,
   address: addressData,
   paymentMethod: PaymentMethods.wirePayment.moduleName,

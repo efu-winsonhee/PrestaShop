@@ -1,23 +1,20 @@
+// Import utils
 import helper from '@utils/helpers';
-import type {BrowserContext, Page} from 'playwright';
-
-import {expect} from 'chai';
+import testContext from '@utils/testContext';
 
 // Import pages
 import installPage from '@pages/install';
 import homePage from '@pages/FO/home';
 
-// Import test context
-import testContext from '@utils/testContext';
+import {expect} from 'chai';
+import type {BrowserContext, Page} from 'playwright';
 
-require('module-alias/register');
-
-const baseContext = 'sanity_installShop_installShop';
-
-let browserContext: BrowserContext;
-let page: Page;
+const baseContext: string = 'sanity_installShop_installShop';
 
 describe('Install Prestashop', async () => {
+  let browserContext: BrowserContext;
+  let page: Page;
+
   // before and after functions
   before(async function () {
     browserContext = await helper.createBrowserContext(this.browser);
@@ -64,7 +61,7 @@ describe('Install Prestashop', async () => {
     await installPage.agreeToTermsAndConditions(page);
     await installPage.nextStep(page);
 
-    if (!(await installPage.elementVisible(page, installPage.thirdStepFinishedListItem, 500))) {
+    if (!(await installPage.isThirdStepVisible(page))) {
       const stepTitle = await installPage.getStepTitle(page, 'System compatibility');
       await expect(stepTitle).to.contain(installPage.thirdStepEnTitle);
     }
@@ -73,7 +70,7 @@ describe('Install Prestashop', async () => {
   it('should click on next and go to step \'Store Information\'', async function () {
     await testContext.addContextItem(this, 'testIdentifier', 'goToStoreInformation', baseContext);
 
-    if (!(await installPage.elementVisible(page, installPage.thirdStepFinishedListItem, 500))) {
+    if (!(await installPage.isThirdStepVisible(page))) {
       await installPage.nextStep(page);
     }
 
@@ -84,9 +81,9 @@ describe('Install Prestashop', async () => {
   it('should fill shop Information form and go to step \'Content Configuration\'', async function () {
     await testContext.addContextItem(this, 'testIdentifier', 'goToContentConfiguration', baseContext);
 
-    await installPage.elementVisible(page, installPage.fourthStepFinishedListItem, 500);
     await installPage.fillInformationForm(page);
     await installPage.nextStep(page);
+    await installPage.waitForFinishedForthStep(page);
 
     const stepTitle = await installPage.getStepTitle(page, 'Content of your store');
     await expect(stepTitle).to.contain(installPage.fifthStepEnTitle);
@@ -96,7 +93,7 @@ describe('Install Prestashop', async () => {
     await testContext.addContextItem(this, 'testIdentifier', 'goToDatabaseInformation', baseContext);
 
     await installPage.nextStep(page);
-    await installPage.elementVisible(page, installPage.fifthStepFinishedListItem, 500);
+    await installPage.waitForFinishedFifthStep(page);
 
     const stepTitle = await installPage.getStepTitle(page, 'System configuration');
     await expect(stepTitle).to.contain(installPage.sixthStepEnTitle);
@@ -211,7 +208,6 @@ describe('Install Prestashop', async () => {
         test.args.step.name,
         test.args.step.timeout,
       );
-
       await expect(stepFinished, `Fail to finish the step ${test.args.step.name}`).to.be.true;
     });
   });
@@ -230,6 +226,7 @@ describe('Install Prestashop', async () => {
     await testContext.addContextItem(this, 'testIdentifier', 'checkPrestashopFO', baseContext);
 
     page = await installPage.goToFOAfterInstall(page);
+
     const result = await homePage.isHomePage(page);
     await expect(result).to.be.true;
   });
